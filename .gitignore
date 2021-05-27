@@ -1,0 +1,6 @@
+Thumbs.db
+*.log
+*.exe
+*.pxml
+/Trimmer Input/
+/Trimmer Output/
