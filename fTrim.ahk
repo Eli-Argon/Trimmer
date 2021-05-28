@@ -181,8 +181,6 @@
             If not ( dBar.y < dFrame.dTopBar.y ) {
                 continue ; SKIP if not lower than the bar right above the doorway.
             }            
-            ; nWeldPoints := fCountWeldPoints(dBar, dBarsFlat)
-            ; nJutNew := ( nWeldPoints > 3 ) ? 10 : 15
             nJutNew := 15
 
             ;======= Left Bar =======;
@@ -226,14 +224,23 @@
 
     For _, aList in dBarsFlat {
         For _, dBar in aList {
-            If ( dBar.oElRef.selectSingleNode( ns("X") ).text != dBar.x
-                or dBar.oElRef.selectSingleNode( ns("Y") ).text != dBar.y
+            
+            If ( dBar.oElRef.selectSingleNode( ns("X") ).text != dBar.x ) {
+                ; Longitudinal bars: distance between the first weld point and the right end of
+                ; the bar must be at least 300mm. Otherwise MSystem automatically extends them.
+                aWeldedBars := fGetWeldedBars(dBar, dBarsFlat)
+                If ( ( dBar.x + dBar.nLength - aWeldedBars[1].x ) >= 300 ) {
+                    isTrimmed := true
+                    dBar.oElRef.selectSingleNode( ns("X") ).text := dBar.x                
+                } 
+            }
+
+            If ( dBar.oElRef.selectSingleNode( ns("Y") ).text != dBar.y
                 or dBar.oElRef.selectSingleNode( ns("Segment","L") ).text != dBar.nLength ) {
                     isTrimmed := true
+                    dBar.oElRef.selectSingleNode( ns("Y") ).text := dBar.y
+                    dBar.oElRef.selectSingleNode( ns("Segment","L") ).text := dBar.nLength
             }
-            dBar.oElRef.selectSingleNode( ns("X") ).text := dBar.x
-            dBar.oElRef.selectSingleNode( ns("Y") ).text := dBar.y
-            dBar.oElRef.selectSingleNode( ns("Segment","L") ).text := dBar.nLength
         }
     }
     ; ####  ^^^ TRIMMING BARS THAT STICK OUT TOO FAR INTO DOORWAYS IN FLAT MESHES  ^^^  ###### ;
@@ -242,21 +249,25 @@
     , "sXml": oPanelXml.xml }
 }
 
-fCountWeldPoints(dBar, dBars) {
+; dBars.aHorizontal and dBars.aVertical must be sorted.
+; Returns a sorted (left to right or bot to top) array of bars that have common weld points with
+; the given bar.
+fGetWeldedBars(dBar, dBars) {
     Local
-    nCount := 0
+    aWeldedBars := []
     sCrossBarsType := ( dBar.nRotZ == 0 ) ? "aVertical" : "aHorizontal"
     ; sCrossBarsType is opposite to the type of dBar, i.e. vertical if dBar is horizontal.
     For _, dCrossBar in dBars[sCrossBarsType] {
         ; To check if numerical ranges overlap: (StartA <= EndB) and (EndA >= StartB)
-        ; Minimum safe welding offset from the ends of bars is 25mm.
-        If ( ( dBar.nLeftX <= (dCrossBar.nRightX-25) ) and ( dBar.nRightX >= (dCrossBar.nLeftX+25) ) )
-        and ( ( dBar.nBotY <= (dCrossBar.nTopY-25) ) and ( dBar.nTopY >= (dCrossBar.nBotY+25) ) ) {
-            nCount++
+        ; Minimum welding offset from the ends of bars is 10mm. 9mm or lower are not considered
+        ; weld points by MSystem.
+        If ( ( dBar.nLeftX <= (dCrossBar.nRightX-10) ) and ( dBar.nRightX >= (dCrossBar.nLeftX+10) ) )
+        and ( ( dBar.nBotY <= (dCrossBar.nTopY-10) ) and ( dBar.nTopY >= (dCrossBar.nBotY+10) ) ) {
+            aWeldedBars.Push( dCrossBar )
         }
     }
 
-    return nCount
+    return aWeldedBars
 }
 
 ns(aNodeNames*) { ; Some XML namespace bullshit
