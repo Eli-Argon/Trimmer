@@ -12,7 +12,7 @@ AutoTrim Off
 ;@Ahk2Exe-SetMainIcon Things\Trimmer.ico
 ;@Ahk2Exe-SetCompanyName Konovalenko Systems
 ;@Ahk2Exe-SetCopyright Eli Konovalenko
-;@Ahk2Exe-SetVersion 1.0.1
+;@Ahk2Exe-SetVersion 1.0.2
 
 #Include fTrim.ahk
 
@@ -27,6 +27,8 @@ pInputDir := A_ScriptDir "\Trimmer Input"
 pOutputDir := A_ScriptDir "\Trimmer Output"
 fAbort( !InStr(FileExist(pInputDir), "D", true), "Trimmer", "Input folder not found." )
 fClean([ pOutputDir ])
+oLogger := new cLogger
+oLogger.del([ "Trimmed" ])
 
 nTotal := 0, nTrimmed := 0, nSkipped := 0
 Loop, files, % pInputDir "\*.pxml", R
@@ -43,16 +45,17 @@ Loop, files, % pInputDir "\*.pxml", R
 
     dOutput := fTrim(oXml, A_LoopFileLongPath, A_LoopFileName)
 
-    If ( dOutput.isTrimmed ) {
-        nTrimmed++
-    } else {
-        nSkipped++
-    }
-
     pRelDir := StrReplace( A_LoopFileDir, pInputDir ) "\"
     FileCreateDir, % pOutputDir . pRelDir
     oFile := FileOpen( pOutputDir . pRelDir . A_LoopFileName, "w-rwd", "UTF-8")
     oFile.Write(dOutput.sXml), oFile.Close()
+
+    If ( dOutput.isTrimmed ) {
+        nTrimmed++
+        oLogger.add("Trimmed", pRelDir, A_LoopFileName, dOutput.nDoorCount)
+    } else {
+        nSkipped++
+    }
 }
 
 nTotalCheck := 0
@@ -61,6 +64,7 @@ Loop, files, % pOutputDir "\*.pxml", R
 
 fAbort( ( nTotal != nTotalCheck ), "Trimmer", "Some files are missing" )
 fAbort( ( nTotal != nTrimmed + nSkipped ), "Trimmer", "The math isn't right.")
+oLogger.save([ "Trimmed" ])
 
 
 MsgBox, 4160, % nTrimmed " trimmed, " nTotal " total.", % "  CUT CUT CUT !!!  "

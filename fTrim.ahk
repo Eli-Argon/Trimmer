@@ -137,7 +137,7 @@
                 isFound := true
         }
         fAbort(!isFound, A_ThisFunc, "Couldn't find matching door mountpart and cutout.", { "pFile": pFile } )
-    }   
+    }
     ;===============  ^^^  Looking for matching CUTOUTs just to make sure.  ^^^  ==============;
     aDoorFrames := []
     For _, dDoor in aDoors {
@@ -238,7 +238,8 @@
     }
     ; ####  ^^^ TRIMMING BARS THAT STICK OUT TOO FAR INTO DOORWAYS IN FLAT MESHES  ^^^  ###### ;
 
-    return { "isTrimmed": isTrimmed, "sXml": oPanelXml.xml }
+    return { "isTrimmed": isTrimmed, "nDoorCount": aDoors.Length()
+    , "sXml": oPanelXml.xml }
 }
 
 fCountWeldPoints(dBar, dBars) {
