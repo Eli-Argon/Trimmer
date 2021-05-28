@@ -12,7 +12,7 @@ AutoTrim Off
 ;@Ahk2Exe-SetMainIcon Things\Trimmer.ico
 ;@Ahk2Exe-SetCompanyName Konovalenko Systems
 ;@Ahk2Exe-SetCopyright Eli Konovalenko
-;@Ahk2Exe-SetVersion 1.0
+;@Ahk2Exe-SetVersion 1.0.1
 
 #Include fTrim.ahk
 
@@ -26,6 +26,7 @@ If !((A_ComputerName == "160037-MMR" and InStr(FileExist("C:\Progress\MSystem\Im
 pInputDir := A_ScriptDir "\Trimmer Input"
 pOutputDir := A_ScriptDir "\Trimmer Output"
 fAbort( !InStr(FileExist(pInputDir), "D", true), "Trimmer", "Input folder not found." )
+fClean([ pOutputDir ])
 
 nTotal := 0, nTrimmed := 0, nSkipped := 0
 Loop, files, % pInputDir "\*.pxml", R

@@ -175,7 +175,6 @@
 
     ; ####  vvv TRIMMING BARS THAT STICK OUT TOO FAR INTO DOORWAYS IN FLAT MESHES  vvv  ###### ;
     For _, dFrame in aDoorFrames {
-        isTrimmed := true
         
         ; @@@@@@@@@@@@@  Horizontal Bars @@@@@@@@@@@@ ;
         For _, dBar in dBarsFlat.aHorizontal {
@@ -227,6 +226,11 @@
 
     For _, aList in dBarsFlat {
         For _, dBar in aList {
+            If ( dBar.oElRef.selectSingleNode( ns("X") ).text != dBar.x
+                or dBar.oElRef.selectSingleNode( ns("Y") ).text != dBar.y
+                or dBar.oElRef.selectSingleNode( ns("Segment","L") ).text != dBar.nLength ) {
+                    isTrimmed := true
+            }
             dBar.oElRef.selectSingleNode( ns("X") ).text := dBar.x
             dBar.oElRef.selectSingleNode( ns("Y") ).text := dBar.y
             dBar.oElRef.selectSingleNode( ns("Segment","L") ).text := dBar.nLength
