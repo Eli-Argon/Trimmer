@@ -18,10 +18,13 @@
             aHorizontal := [], aVertical := []
 
             For oBar in oSteel.selectNodes( ns("Bar") ) { ; Iterate through bars.
-                dSingleBar := { oElRef: oBar, nLength: 0 }
-                dSingleBar.X := oBar.selectSingleNode( ns("X") ).text
-                dSingleBar.Y := oBar.selectSingleNode( ns("Y") ).text
-                dSingleBar.Z := oBar.selectSingleNode( ns("Z") ).text
+                dSingleBar := { elRef: oBar, nLength: 0 }
+                
+                For _, name in [ "X", "Y", "Z", "RotZ" ] {
+                    dSingleBar[name] := oBar.selectSingleNode( ns( name ) ).text
+                    dSingleBar[name] := dSingleBar[name] ? dSingleBar[name] : 0
+                }
+                
                 dSingleBar.nDiam := oBar.selectSingleNode( ns("Diameter") ).text
                 dSingleBar.nCount := oBar.selectSingleNode( ns("PieceCount") ).text
 
@@ -33,15 +36,13 @@
                         isBent := true, hasBent := true
                     }
                 }
-
-                dSingleBar.nRotZ := oBar.selectSingleNode( ns("RotZ") ).text
-                dSingleBar.nRotZ := dSingleBar.nRotZ ? dSingleBar.nRotZ : 0
-                If ( dSingleBar.nRotZ == 90 ) {
+                
+                If ( dSingleBar.RotZ == 90 ) {
                     dSingleBar.nLeftX := dSingleBar.x, dSingleBar.nRightX := dSingleBar.x
                     dSingleBar.nBotY := dSingleBar.y
                     dSingleBar.nTopY := dSingleBar.y + dSingleBar.nLength
                     aVertical.Push( dSingleBar )
-                } else if ( dSingleBar.nRotZ == 0 ) {
+                } else if ( dSingleBar.RotZ == 0 ) {
                     dSingleBar.nBotY := dSingleBar.y, dSingleBar.nTopY := dSingleBar.y
                     dSingleBar.nLeftX := dSingleBar.x
                     dSingleBar.nRightX := dSingleBar.x + dSingleBar.nLength
@@ -224,29 +225,57 @@
 
     For _, aList in dBarsFlat {
         For _, dBar in aList {
-            
-            If ( dBar.oElRef.selectSingleNode( ns("X") ).text != dBar.x ) {
+
+            isElement := dBar.elRef.selectSingleNode( ns("X") ).text
+            nBarX := isElement ? isElement : 0
+            If ( nBarX != dBar.x ) {
                 ; Longitudinal bars: distance between the first weld point and the right end of
                 ; the bar must be at least 300mm. Otherwise MSystem automatically extends them.
                 aWeldedBars := fGetWeldedBars(dBar, dBarsFlat)
                 If ( ( dBar.x + dBar.nLength - aWeldedBars[1].x ) >= 300 ) {
                     isTrimmed := true
-                    dBar.oElRef.selectSingleNode( ns("X") ).text := dBar.x                
+
+                    If ( isElement ) {
+                        dBar.elRef.selectSingleNode( ns("X") ).text := dBar.x
+                    } else {
+                        el := oPanelXML.createNode( 1, "X", oPanelXML.DocumentElement.NamespaceURI )
+                        el.text := dBar.x
+                        oBar.appendChild( el )
+                        t := oPanelXML.createTextNode( "`r`n" )
+                        oBar.appendChild( t )
+                    }
                 } 
             }
 
-            If ( dBar.oElRef.selectSingleNode( ns("Y") ).text != dBar.y
-                or dBar.oElRef.selectSingleNode( ns("Segment","L") ).text != dBar.nLength ) {
+            isElement := dBar.elRef.selectSingleNode( ns("Y") ).text
+            nBarY := isElement ? isElement : 0
+            If ( nBarY != dBar.y ) {
                     isTrimmed := true
-                    dBar.oElRef.selectSingleNode( ns("Y") ).text := dBar.y
-                    dBar.oElRef.selectSingleNode( ns("Segment","L") ).text := dBar.nLength
+
+                    If ( isElement ) {
+                        dBar.elRef.selectSingleNode( ns("Y") ).text := dBar.y
+                    } else {
+                        el := oPanelXML.createNode( 1, "Y", oPanelXML.DocumentElement.NamespaceURI )
+                        el.text := dBar.y
+                        oBar.appendChild( el )
+                        t := oPanelXML.createTextNode( "`r`n" )
+                        oBar.appendChild( t )
+                    }
+            }
+
+            If ( dBar.elRef.selectSingleNode( ns("Segment","L") ).text != dBar.nLength ) {
+                isTrimmed := true
+                dBar.elRef.selectSingleNode( ns("Segment","L") ).text := dBar.nLength
             }
         }
     }
     ; ####  ^^^ TRIMMING BARS THAT STICK OUT TOO FAR INTO DOORWAYS IN FLAT MESHES  ^^^  ###### ;
 
+    sXml := RegExReplace(oPanelXML.xml, "S)\Q<?xml version=""1.0""?><PXML\E"
+                        , "<?xml version=""1.0"" encoding=""utf-8""?>`r`n<PXML")
+
     return { "isTrimmed": isTrimmed, "nDoorCount": aDoors.Length()
-    , "sXml": oPanelXml.xml }
+    , "sXml": sXml }
 }
 
 ; dBars.aHorizontal and dBars.aVertical must be sorted.
@@ -255,7 +284,7 @@
 fGetWeldedBars(dBar, dBars) {
     Local
     aWeldedBars := []
-    sCrossBarsType := ( dBar.nRotZ == 0 ) ? "aVertical" : "aHorizontal"
+    sCrossBarsType := ( dBar.RotZ == 0 ) ? "aVertical" : "aHorizontal"
     ; sCrossBarsType is opposite to the type of dBar, i.e. vertical if dBar is horizontal.
     For _, dCrossBar in dBars[sCrossBarsType] {
         ; To check if numerical ranges overlap: (StartA <= EndB) and (EndA >= StartB)

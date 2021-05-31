@@ -12,7 +12,7 @@ AutoTrim Off
 ;@Ahk2Exe-SetMainIcon Things\Trimmer.ico
 ;@Ahk2Exe-SetCompanyName Konovalenko Systems
 ;@Ahk2Exe-SetCopyright Eli Konovalenko
-;@Ahk2Exe-SetVersion 1.0.3
+;@Ahk2Exe-SetVersion 1.0.4
 
 #Include fTrim.ahk
 
