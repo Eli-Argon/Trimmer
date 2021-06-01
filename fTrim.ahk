@@ -154,8 +154,9 @@
                     If ( nDistanR >= 150 ) {
                         break
                     } else if ( ( nDistanR > 10 ) and ( dBarR.nLength > dDoor.nTopY ) ) {
-                            dLeftBar := dBarL.Clone()
-                            dRightBar := dBarR.Clone()
+                        dLeftBar := dBarL.Clone()
+                        dRightBar := dBarR.Clone()
+                        break
                     }
                 }
             }           
