@@ -12,7 +12,7 @@ AutoTrim Off
 ;@Ahk2Exe-SetMainIcon Things\Trimmer.ico
 ;@Ahk2Exe-SetCompanyName Konovalenko Systems
 ;@Ahk2Exe-SetCopyright Eli Konovalenko
-;@Ahk2Exe-SetVersion 1.0.4
+;@Ahk2Exe-SetVersion 1.0.5
 
 #Include fTrim.ahk
 
@@ -28,7 +28,7 @@ pOutputDir := A_ScriptDir "\Trimmer Output"
 fAbort( !InStr(FileExist(pInputDir), "D", true), "Trimmer", "Input folder not found." )
 fClean([ pOutputDir ])
 oLogger := new cLogger
-oLogger.del([ "Trimmed" ])
+oLogger.del([ "Trimmed", "Skipped" ])
 
 nTotal := 0, nTrimmed := 0, nSkipped := 0
 Loop, files, % pInputDir "\*.pxml", R
@@ -55,6 +55,7 @@ Loop, files, % pInputDir "\*.pxml", R
         oLogger.add("Trimmed", pRelDir, A_LoopFileName, dOutput.nDoorCount)
     } else {
         nSkipped++
+        oLogger.add("Skipped", pRelDir, A_LoopFileName, dOutput.nDoorCount)
     }
 }
 
@@ -64,7 +65,7 @@ Loop, files, % pOutputDir "\*.pxml", R
 
 fAbort( ( nTotal != nTotalCheck ), "Trimmer", "Some files are missing" )
 fAbort( ( nTotal != nTrimmed + nSkipped ), "Trimmer", "The math isn't right.")
-oLogger.save([ "Trimmed" ])
+oLogger.save([ "Trimmed", "Skipped" ])
 
 
 MsgBox, 4160, % nTrimmed " trimmed, " nTotal " total.", % "  CUT CUT CUT !!!  "

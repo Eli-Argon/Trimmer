@@ -144,19 +144,21 @@
     For _, dDoor in aDoors {
 
         dLeftBar := "", dRightBar := ""
-        For _, dBar in dBarsFlat.aVertical {
-            dNextBar := dBarsFlat.aVertical[A_Index+1]
-            ; msgbox % "«" dBar.x "» < «" dDoor.nLeftX "», «" dBar.nLength "» > «" dDoor.nTopY "»`n"
-                    ; . "«" dNextBar.x "» > «" dDoor.nLeftX "»"
-            If ( ( dBar.x < dDoor.nLeftX ) and ( dBar.nLength > dDoor.nTopY )
-             and ( dNextBar.x > dDoor.nLeftX ) ) {
-                dLeftBar := dBar.Clone()
-            }
-            If ( ( dBar.x < dDoor.nRightX )
-             and ( dNextBar.x > dDoor.nRightX ) and ( dNextBar.nLength > dDoor.nTopY ) ) {
-                dRightBar := dNextBar.Clone()
+        For _, dBarL in dBarsFlat.aVertical {
+            nDistanL := dDoor.nLeftX - dBarL.x
+            If ( dBarL.x > dDoor.nLeftX ) {
                 break
-            }
+            } else if ( ( nDistanL > 10 ) and ( nDistanL < 150 ) and ( dBarL.nLength > dDoor.nTopY ) ) {
+                For _, dBarR in dBarsFlat.aVertical {
+                    nDistanR := dBarR.x - dDoor.nRightX
+                    If ( nDistanR >= 150 ) {
+                        break
+                    } else if ( ( nDistanR > 10 ) and ( dBarR.nLength > dDoor.nTopY ) ) {
+                            dLeftBar := dBarL.Clone()
+                            dRightBar := dBarR.Clone()
+                    }
+                }
+            }           
         }
 
         dTopBar := ""
@@ -168,6 +170,7 @@
             }
         }
 
+; msgbox % fObjToStr(dLeftBar) "`n`n2:" fObjToStr(dRightBar) "`n`n3:" fObjToStr(dTopBar) "`n`n"
         If ( dLeftBar and dRightBar and dTopBar ) {
             aDoorFrames.Push( { "dLeftBar": dLeftBar, "dRightBar": dRightBar, "dTopBar": dTopBar } )
         }
